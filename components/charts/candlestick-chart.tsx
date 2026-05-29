@@ -27,6 +27,8 @@ interface Props {
   data: ChartDataPoint[]
   volumeData?: VolumeDataPoint[]
   height?: number
+  activePeriod?: string
+  onPeriodChange?: (period: string) => void
 }
 
 type ChartType =
@@ -70,7 +72,14 @@ function deduplicateAndSort<T extends { time: number | string }>(arr: T[]): T[] 
     })
 }
 
-export const CandlestickChart: React.FC<Props> = ({ symbol = '', data, volumeData = [], height = 400 }) => {
+export const CandlestickChart: React.FC<Props> = ({ 
+  symbol = '', 
+  data, 
+  volumeData = [], 
+  height = 400,
+  activePeriod = '1mo',
+  onPeriodChange
+}) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const mainSeriesRef = useRef<ISeriesApi<any> | null>(null)
@@ -83,7 +92,30 @@ export const CandlestickChart: React.FC<Props> = ({ symbol = '', data, volumeDat
   const [chartType, setChartType] = useState<ChartType>('candles')
   const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false)
   const [favorites, setFavorites] = useState<ChartType[]>(['bars', 'candles', 'hollow', 'line', 'area', 'heikin'])
-  const [activeInterval, setActiveInterval] = useState('5m')
+
+  const getIntervalFromPeriod = (per: string): string => {
+    switch (per) {
+      case '1d': return '5m'
+      case '5d': return '15m'
+      case '1mo': return '1h'
+      case '3mo': return '1d'
+      case '6mo': return '1d'
+      default: return '1w'
+    }
+  }
+
+  const activeInterval = getIntervalFromPeriod(activePeriod)
+
+  const handleIntervalClick = (int: string) => {
+    if (!onPeriodChange) return
+    let targetPeriod = '1mo'
+    if (int === '1m' || int === '5m') targetPeriod = '1d'
+    else if (int === '15m') targetPeriod = '5d'
+    else if (int === '1h') targetPeriod = '1mo'
+    else if (int === '1d') targetPeriod = '3mo'
+    else if (int === '1w') targetPeriod = '1y'
+    onPeriodChange(targetPeriod)
+  }
 
   // Interactive Indicator Toggles
   const [showVolume, setShowVolume] = useState(true)
@@ -752,7 +784,7 @@ export const CandlestickChart: React.FC<Props> = ({ symbol = '', data, volumeDat
             {['1m', '5m', '15m', '1h', '1d', '1w'].map(int => (
               <button
                 key={int}
-                onClick={() => setActiveInterval(int)}
+                onClick={() => handleIntervalClick(int)}
                 className={cn(
                   'h-5 px-2.5 rounded-md transition-all uppercase',
                   activeInterval === int ? 'bg-purple-600 text-white font-bold' : 'hover:text-white/80'

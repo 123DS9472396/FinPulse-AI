@@ -470,6 +470,8 @@ export default function StockDetailPage() {
                           color: d.close >= d.open ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
                         }))}
                         height={320}
+                        activePeriod={period}
+                        onPeriodChange={setPeriod}
                       />
                     </div>
                   ) : (
@@ -612,6 +614,8 @@ export default function StockDetailPage() {
                       color: d.close >= d.open ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
                     }))}
                     height={500}
+                    activePeriod={period}
+                    onPeriodChange={setPeriod}
                   />
                 </div>
               ) : (
