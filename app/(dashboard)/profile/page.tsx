@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, User, Portfolio, TrendingUp, Settings, Brain, Target, PieChart, Plus } from 'lucide-react'
+import { Loader2, User, Briefcase, TrendingUp, Settings, Brain, Target, PieChart, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface UserProfile {
@@ -320,7 +320,7 @@ export default function ProfilePage() {
             Profile
           </TabsTrigger>
           <TabsTrigger value="portfolio" className="flex items-center gap-2">
-            <Portfolio className="h-4 w-4" />
+            <Briefcase className="h-4 w-4" />
             Portfolio
           </TabsTrigger>
           <TabsTrigger value="ai-insights" className="flex items-center gap-2">
@@ -535,7 +535,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <Portfolio className="h-12 w-12 text-gray-400 mb-4" />
+                  <Briefcase className="h-12 w-12 text-gray-400 mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No Portfolio Data</h3>
                   <p className="text-gray-600 text-center">
                     Start building your portfolio to see holdings and AI insights here.
