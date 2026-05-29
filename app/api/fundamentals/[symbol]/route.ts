@@ -6,19 +6,20 @@ import { NextResponse } from "next/server"
 
 export async function GET(
   request: Request,
-  { params }: { params: { symbol: string } }
+  { params }: { params: Promise<{ symbol: string }> }
 ) {
-  const symbol = params.symbol.toUpperCase()
+  const { symbol } = await params
+  const upperSymbol = symbol.toUpperCase()
 
   try {
     // Yahoo Finance symbol for Indian stocks: RELIANCE.NS (NSE) or RELIANCE.BO (BSE)
-    const yahooSymbol = symbol.includes(".") ? symbol : `${symbol}.NS`
+    const yahooSymbol = upperSymbol.includes(".") ? upperSymbol : `${upperSymbol}.NS`
 
     const [yahooData, finnhubProfile, finnhubMetrics, finnhubNews] = await Promise.allSettled([
       fetchYahooFundamentals(yahooSymbol),
-      fetchFinnhubProfile(symbol),
-      fetchFinnhubMetrics(symbol),
-      fetchFinnhubNews(symbol),
+      fetchFinnhubProfile(upperSymbol),
+      fetchFinnhubMetrics(upperSymbol),
+      fetchFinnhubNews(upperSymbol),
     ])
 
     let yahoo: any = yahooData.status === "fulfilled" ? yahooData.value : null
@@ -29,7 +30,7 @@ export async function GET(
     }
 
     const price = yahoo?.currentPrice || 1000
-    const highFidelity = getHighFidelityFundamentals(symbol, price)
+    const highFidelity = getHighFidelityFundamentals(upperSymbol, price)
 
     const profile = finnhubProfile.status === "fulfilled" ? finnhubProfile.value : null
     const metrics = finnhubMetrics.status === "fulfilled" ? finnhubMetrics.value : null
@@ -37,8 +38,8 @@ export async function GET(
 
     // Merge: prefer Finnhub for fundamentals, Yahoo for price/general
     const combined = {
-      symbol,
-      name:           profile?.name         || yahoo?.name || symbol,
+      symbol: upperSymbol,
+      name:           profile?.name         || yahoo?.name || upperSymbol,
       sector:         profile?.finnhubIndustry || yahoo?.sector || highFidelity.sector,
       industry:       profile?.finnhubIndustry || yahoo?.industry || highFidelity.industry,
       exchange:       profile?.exchange       || "NSE",
@@ -138,7 +139,7 @@ export async function GET(
       data: { ...combined, redFlags },
     })
   } catch (error) {
-    console.error(`Fundamentals error for ${symbol}:`, error)
+    console.error(`Fundamentals error for ${upperSymbol}:`, error)
     return NextResponse.json({ success: false, error: "Failed to fetch fundamentals" }, { status: 500 })
   }
 }
