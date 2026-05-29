@@ -1,0 +1,18 @@
+# Define file attributes and language statistics overrides for GitHub's Linguist library
+# See https://github.com/github/linguist/blob/master/docs/overrides.md
+
+# Mark auto-generated build caches and massive lock files as generated
+# This prevents them from distorting the repository's programming language percentages
+package-lock.json linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+tsconfig.tsbuildinfo linguist-generated=true
+project-report.html linguist-generated=true
+.next/** linguist-generated=true
+dist/** linguist-generated=true
+build/** linguist-generated=true
+
+# Explicitly ensure Linguist detects and highlights core language components
+scripts/*.py linguist-detectable=true
+lib/*.ts linguist-detectable=true
+components/**/*.tsx linguist-detectable=true
+app/**/*.tsx linguist-detectable=true
