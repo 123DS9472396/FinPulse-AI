@@ -54,11 +54,15 @@ export async function GET(
       } catch { /* ignore news failure */ }
     }
 
+    const safeChart = chartData || { symbol, data: [] }
+
     // Update caches independently
     if (!freshPrice) priceCache.set(priceKey, { data: stockData, expiresAt: Date.now() + PRICE_TTL })
-    if (!freshChart) stockCache.set(chartKey, { data: { chart: chartData, news: newsData }, expiresAt: Date.now() + CHART_TTL })
+    if (!freshChart && chartData?.data?.length) {
+      stockCache.set(chartKey, { data: { chart: chartData, news: newsData }, expiresAt: Date.now() + CHART_TTL })
+    }
 
-    const responseData = { stock: stockData, chart: chartData, news: newsData, period }
+    const responseData = { stock: stockData, chart: safeChart, news: newsData, period }
     return NextResponse.json({ success: true, data: responseData })
   } catch (error) {
     console.error('Stock detail error:', error)

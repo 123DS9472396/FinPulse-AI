@@ -475,7 +475,7 @@ export default function StockDetailPage() {
                   <CardTitle>Price Chart ({period.toUpperCase()})</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 sm:p-6 sm:pt-0">
-                  {chartData ? (
+                  {chartData && chartData.data.length > 0 ? (
                     <div className="w-full mt-4">
                       <CandlestickChart 
                         symbol={symbol}
@@ -499,6 +499,14 @@ export default function StockDetailPage() {
                         activePeriod={period}
                         onPeriodChange={setPeriod}
                       />
+                    </div>
+                  ) : chartData && chartData.data.length === 0 ? (
+                    <div className="h-80 flex items-center justify-center text-muted-foreground">
+                      <div className="text-center">
+                        <BarChart3 className="h-12 w-12 mx-auto mb-4" />
+                        <p>No chart data for this range.</p>
+                        <p className="text-xs mt-2">Try a shorter period or refresh.</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="h-80 flex items-center justify-center text-muted-foreground">

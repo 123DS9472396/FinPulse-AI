@@ -255,24 +255,55 @@ class YahooFinanceAPI {
     try {
       const yahooSymbol = symbol.includes('.') || symbol.startsWith('^') ? symbol : `${symbol}.NS`
       
-      // Determine interval based on period
-      let interval = '1d'
-      if (period === '1d') interval = '5m'
-      else if (period === '5d') interval = '15m'
-      else if (period === '1mo') interval = '1h'
-      else if (period === '3mo' || period === '6mo') interval = '1d'
-      else interval = '1w'
-      
-      // Use query1 for charts as it's sometimes more reliable for historical data
-      // For intraday (1d + 5m), bypass Next.js cache entirely so we always get data up to the current minute
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${interval}&range=${period}`
-      const fetchOptions = period === '1d'
-        ? { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept': 'application/json' }, cache: 'no-store' as RequestCache }
-        : undefined
-      const data = fetchOptions
-        ? await fetch(url, fetchOptions).then(r => r.ok ? r.json() : null).catch(() => null)
-        : await this.fetchWithRetry(url)
-      
+      // Determine interval candidates based on period (long ranges prefer coarser intervals)
+      const intervalCandidates: string[] = (() => {
+        switch (period) {
+          case '1d':
+            return ['5m']
+          case '5d':
+            return ['15m', '30m']
+          case '1mo':
+            return ['1h', '30m', '1d']
+          case '3mo':
+          case '6mo':
+            return ['1d', '1wk']
+          case '1y':
+            return ['1d', '1wk']
+          case '2y':
+          case '5y':
+            return ['1mo', '1wk', '1d']
+          default:
+            return ['1wk', '1mo']
+        }
+      })()
+
+      const fetchChart = async (interval: string) => {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${interval}&range=${period}`
+        try {
+          // For intraday (1d + 5m), bypass Next.js cache entirely so we always get data up to the current minute
+          if (period === '1d') {
+            const res = await fetch(url, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json'
+              },
+              cache: 'no-store' as RequestCache,
+            })
+            return res.ok ? await res.json() : null
+          }
+          return await this.fetchWithRetry(url)
+        } catch {
+          return null
+        }
+      }
+
+      let data: any = null
+      for (const interval of intervalCandidates) {
+        data = await fetchChart(interval)
+        const result = data?.chart?.result?.[0]
+        if (result?.timestamp && result?.indicators?.quote?.[0]) break
+      }
+
       const result = data?.chart?.result?.[0]
       if (!result || !result.timestamp || !result.indicators?.quote?.[0]) return null
       
