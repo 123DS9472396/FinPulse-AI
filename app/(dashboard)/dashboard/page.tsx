@@ -116,7 +116,7 @@ export default function DashboardPage() {
               { key: "alphaVantage", label: "Alpha Vantage" },
             ].map((api) => {
               const status = apiStatus?.apis?.[api.key]?.status
-              const ok = status === "working"
+              const ok = status === "working" || status === "limited"
               const noKey = status === "no_key"
               return (
                 <div key={api.key} className="flex items-center gap-1.5">
