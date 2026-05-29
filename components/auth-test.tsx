@@ -16,8 +16,8 @@ export default function AuthTest() {
     try {
       // First try the demo credentials
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'admin@aiphen.com',
-        password: 'AIPhen2025!'
+        email: 'admin@finpulse.com',
+        password: 'FinPulse2026!'
       })
       
       if (error) {
@@ -25,8 +25,8 @@ export default function AuthTest() {
         
         // If login fails, try to create the account
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: 'admin@aiphen.com',
-          password: 'AIPhen2025!',
+          email: 'admin@finpulse.com',
+          password: 'FinPulse2026!',
           options: {
             emailRedirectTo: 'http://localhost:3000/auth/callback?redirectTo=/onboarding'
           }
@@ -35,7 +35,7 @@ export default function AuthTest() {
         if (signUpError) {
           setResult(`❌ Signup Error: ${signUpError.message}`)
         } else {
-          setResult(`✅ Account Created! Now try logging in with:\nEmail: admin@aiphen.com\nPassword: AIPhen2025!`)
+          setResult(`✅ Account Created! Now try logging in with:\nEmail: admin@finpulse.com\nPassword: FinPulse2026!`)
         }
       } else {
         setResult(`✅ Login Successful! User: ${data.user?.email}`)
@@ -78,7 +78,7 @@ export default function AuthTest() {
 
   return (
     <div className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">AIPhen Auth Test</h2>
+      <h2 className="text-xl font-bold mb-4">FinPulse AI Auth Test</h2>
       
       <div className="space-y-4">
         <button 
@@ -106,8 +106,8 @@ export default function AuthTest() {
       
       <div className="mt-6 text-sm text-gray-600">
         <h3 className="font-semibold">Test Credentials:</h3>
-        <p>📧 Email: admin@aiphen.com</p>
-        <p>🔑 Password: AIPhen2025!</p>
+        <p>📧 Email: admin@finpulse.com</p>
+        <p>🔑 Password: FinPulse2026!</p>
         <hr className="my-2" />
         <p className="text-xs">Alternative: testuser@gmail.com / TestUser123!</p>
       </div>

@@ -78,7 +78,7 @@ export function Header() {
           <a href="/dashboard" className="flex items-center gap-3 transition-all duration-300 hover:opacity-90">
             <div className="relative w-9 h-9 flex items-center justify-center">
               <Image
-                src="/images/aiphen-logo.png"
+                src="/images/finpulse-logo.png"
                 alt="FinPulse AI Logo"
                 width={36}
                 height={36}

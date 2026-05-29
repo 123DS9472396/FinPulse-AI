@@ -55,8 +55,8 @@ export default function DatabaseCleanup() {
     try {
       // Generate unique email
       const timestamp = Date.now()
-      const email = `user${timestamp}@aiphen.demo`
-      const password = 'AIPhenUser123!'
+      const email = `user${timestamp}@finpulse.demo`
+      const password = 'FinPulseUser123!'
       
       setResult(`Creating account with email: ${email}`)
       
