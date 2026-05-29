@@ -154,7 +154,7 @@ class YahooFinanceAPI {
   
   async getStockPrice(symbol: string): Promise<StockData | null> {
     try {
-      const yahooSymbol = symbol.includes('.') ? symbol : `${symbol}.NS`
+      const yahooSymbol = symbol.includes('.') || symbol.startsWith('^') ? symbol : `${symbol}.NS`
 
       // Fetch chart (price/volume) and quote (fundamentals) in PARALLEL
       const [chartData, quoteData] = await Promise.allSettled([
@@ -201,7 +201,7 @@ class YahooFinanceAPI {
 
   async getChartData(symbol: string, period: string = '3mo'): Promise<ChartData | null> {
     try {
-      const yahooSymbol = symbol.includes('.') ? symbol : `${symbol}.NS`
+      const yahooSymbol = symbol.includes('.') || symbol.startsWith('^') ? symbol : `${symbol}.NS`
       
       // Determine interval based on period
       let interval = '1d'
@@ -259,7 +259,7 @@ class YahooFinanceAPI {
 
   async getStockNews(symbol: string): Promise<Array<{ title: string; publisher: string; link: string; providerPublishTime: number }> | null> {
     try {
-      const yahooSymbol = symbol.includes('.') ? symbol : `${symbol}.NS`
+      const yahooSymbol = symbol.includes('.') || symbol.startsWith('^') ? symbol : `${symbol}.NS`
       const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${yahooSymbol}`
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
