@@ -70,7 +70,7 @@ FinPulse AI stands far ahead of standard finance templates through **8 genuine, 
 
 ---
 
-## 📦 Local Setup Instructions
+## 📦 Local Setup Instructions & Developer Guide
 
 A new developer can clone and run this project in under 2 minutes:
 
@@ -105,7 +105,32 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to explore the dashboard, discover tab, and individual stock details page!
+Open [http://localhost:3000](http://localhost:3000) (or `http://localhost:3001` if port 3000 is occupied) in your browser to explore the dashboard, discover tab, and individual stock details page!
+
+---
+
+## 🏗️ Technical Architecture & Database Guides
+
+### 1. Unified Frontend & Backend Server
+FinPulse AI is built using **Next.js App Router (unified framework)**. There is no separate backend server or cluster to run:
+* **Frontend UI Dashboard**: Served under root routing `/dashboard`, `/discover`, `/settings`, etc.
+* **Serverless Backend APIs**: Served as server-side Node.js Route Handlers under `/api/*`. They run on the same port and server instances simultaneously (e.g. `http://localhost:3000/api/...`).
+* **Active Backend Routes**:
+  - `/api/automation/n8n` — SaaS alert trigger webhooks (polled dynamically).
+  - `/api/fundamentals/[symbol]` — Smart Yahoo Finance 401 fallback.
+  - `/api/ai/analyze-stock` — Runs quantitative ML Holt smoothed projections + Gemini analysis.
+  - `/api/ai/explain` — Performs token-overlap similarity Vector RAG.
+
+### 2. Supabase Cloud PostgreSQL Database
+The application connects to a cloud-hosted, scalable **PostgreSQL database powered by Supabase** (`https://jieqnsvaecmqbvzlkbos.supabase.co`):
+* **Initial Database Clients**: Initialized inside `/lib/supabase.ts` (client-side active auth and tracking) and `/lib/supabase-server.ts` (secure serverless database operations).
+* **Core Schemas**: Manages User Profiles, Portfolios, Transactions, Course Modules, and Articles.
+
+### 3. Setup & Seeding Utility Routes
+To check and bootstrap tables, use the following server-side API endpoints directly in your browser:
+* 🔌 **Verify DB Link**: `http://localhost:3000/api/db-test` — Performs instant connection verification checks.
+* ⚡ **Setup SQL Schemas**: `http://localhost:3000/api/db-setup` — Creates all necessary tables and structures in Postgres.
+* 🎓 **Seed Academy Store**: `http://localhost:3000/resources/courses/seed` — Seeds mutual funds, courses, and educational assets.
 
 ---
 
