@@ -2,41 +2,57 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { DiscoverTabs } from "@/components/discover/discover-tabs"
 import { InstrumentFilters } from "@/components/discover/instrument-filters"
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Filter, Star, Search } from "lucide-react"
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Star } from "lucide-react"
 import { getCachedMutualFunds } from "@/lib/market-data-cache"
-import { Input } from "@/components/ui/input"
 import { RealTimeStockSearch } from "@/components/discover/real-time-stock-search"
 import { LiveMarketData } from "@/components/discover/live-market-data"
+import { marketDataService } from "@/lib/market-api"
 
 export default async function DiscoverPage() {
-
   // Fetch mutual funds data directly from the database
   const { funds: mutualFunds } = await getCachedMutualFunds()
+
+  // Fetch live prices for featured assets dynamically in parallel
+  const livePrices = await marketDataService.getMultipleStocks(['RELIANCE', 'TCS', 'HDFCBANK'])
+  
+  const getLiveStock = (sym: string) => {
+    return livePrices.find(s => s.symbol === sym)
+  }
+
+  const rel = getLiveStock('RELIANCE')
+  const tcs = getLiveStock('TCS')
+  const hdfc = getLiveStock('HDFCBANK')
+
+  const formatPrice = (val?: number) => 
+    val ? `₹${val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'
+
+  const formatChange = (val?: number) =>
+    val !== undefined ? `${val >= 0 ? '+' : ''}${val.toFixed(2)}%` : '0.00%'
 
   const marketHighlights = [
     {
       title: "Top Gainers",
       value: "RELIANCE",
-      change: "+5.2%",
-      price: "₹2,456",
+      change: formatChange(rel?.changePercent),
+      price: formatPrice(rel?.price),
       icon: <TrendingUp className="h-5 w-5 text-green-400" />,
-      isPositive: true,
+      isPositive: (rel?.changePercent ?? 0) >= 0,
     },
     {
       title: "Most Active",
       value: "TCS",
-      change: "+2.1%",
-      price: "₹3,234",
+      change: formatChange(tcs?.changePercent),
+      price: formatPrice(tcs?.price),
       icon: <BarChart3 className="h-5 w-5 text-finance-purple" />,
-      isPositive: true,
+      isPositive: (tcs?.changePercent ?? 0) >= 0,
     },
     {
       title: "Top Losers",
-      value: "HDFC",
-      change: "-3.8%",
-      price: "₹1,567",
+      value: "HDFC Bank",
+      change: formatChange(hdfc?.changePercent),
+      price: formatPrice(hdfc?.price),
       icon: <TrendingDown className="h-5 w-5 text-red-400" />,
-      isPositive: false,
+      isPositive: (hdfc?.changePercent ?? 0) >= 0,
     },
     {
       title: "Market Cap",
@@ -52,32 +68,32 @@ export default async function DiscoverPage() {
     {
       name: "Reliance Industries",
       symbol: "RELIANCE",
-      price: "₹2,456.75",
-      change: "+5.2%",
-      volume: "2.3M",
+      price: formatPrice(rel?.price),
+      change: formatChange(rel?.changePercent),
+      volume: rel ? `${(rel.volume / 1e6).toFixed(1)}M` : "N/A",
       rating: 4.5,
       category: "Large Cap",
-      isPositive: true,
+      isPositive: (rel?.changePercent ?? 0) >= 0,
     },
     {
       name: "Tata Consultancy Services",
       symbol: "TCS",
-      price: "₹3,234.20",
-      change: "+2.1%",
-      volume: "1.8M",
+      price: formatPrice(tcs?.price),
+      change: formatChange(tcs?.changePercent),
+      volume: tcs ? `${(tcs.volume / 1e6).toFixed(1)}M` : "N/A",
       rating: 4.8,
       category: "Large Cap",
-      isPositive: true,
+      isPositive: (tcs?.changePercent ?? 0) >= 0,
     },
     {
-      name: "HDFC Bank",
+      name: "HDFC Bank Ltd",
       symbol: "HDFCBANK",
-      price: "₹1,567.30",
-      change: "-1.5%",
-      volume: "3.1M",
+      price: formatPrice(hdfc?.price),
+      change: formatChange(hdfc?.changePercent),
+      volume: hdfc ? `${(hdfc.volume / 1e6).toFixed(1)}M` : "N/A",
       rating: 4.3,
       category: "Banking",
-      isPositive: false,
+      isPositive: (hdfc?.changePercent ?? 0) >= 0,
     },
   ]
 
