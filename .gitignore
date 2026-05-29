@@ -1,0 +1,39 @@
+# Dependencies
+/node_modules
+/.pnpm-store
+
+# Next.js build and cache outputs
+/.next/
+/out/
+tsconfig.tsbuildinfo
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local environment variables and secrets (CRITICAL: Do not leak API keys!)
+.env
+.env*.local
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE and Editor settings
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Temp scratch outputs
+/scratch/
+/tmp/
