@@ -147,11 +147,33 @@ export default function StockDetailPage() {
     setIsTradeOpen(false)
   }
 
+  // Load chart + stock data when symbol/period changes
   useEffect(() => {
     if (symbol) {
-      loadStockData()
+      // For intraday (1d), bust the server cache first so we always get fresh candles
+      if (period === '1d') {
+        fetch(`/api/stocks/${symbol}`, { method: 'POST' }).finally(() => loadStockData())
+      } else {
+        loadStockData()
+      }
     }
   }, [symbol, period])
+
+  // Live price auto-refresh every 60 seconds (keeps price ticker updated)
+  useEffect(() => {
+    if (!symbol) return
+    const iv = setInterval(async () => {
+      try {
+        const r = await fetch(`/api/stocks/${symbol}`, { method: 'POST' })
+        const d = await r.json()
+        if (d.success && d.data) {
+          setStockData(prev => prev ? { ...prev, price: d.data.price, change: d.data.change, changePercent: d.data.changePercent } : prev)
+          setLastUpdated(new Date())
+        }
+      } catch { /* silent */ }
+    }, 60_000)
+    return () => clearInterval(iv)
+  }, [symbol])
 
   const loadStockData = async () => {
     setLoading(true)
@@ -457,18 +479,22 @@ export default function StockDetailPage() {
                     <div className="w-full mt-4">
                       <CandlestickChart 
                         symbol={symbol}
-                        data={chartData.data.map(d => ({
-                          time: (new Date(d.timestamp).getTime() / 1000) as any,
-                          open: d.open,
-                          high: d.high,
-                          low: d.low,
-                          close: d.close,
-                        }))}
-                        volumeData={chartData.data.map(d => ({
-                          time: (new Date(d.timestamp).getTime() / 1000) as any,
-                          value: d.volume,
-                          color: d.close >= d.open ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
-                        }))}
+                        data={chartData.data.map(d => {
+                          const utcSec = new Date(d.timestamp).getTime() / 1000
+                          // Only shift to IST for intraday (1d) so hours show correctly.
+                          // For multi-day ranges keep raw UTC — chart lib formats those as dates.
+                          const t = period === '1d' ? utcSec + 19800 : utcSec
+                          return { time: t as any, open: d.open, high: d.high, low: d.low, close: d.close }
+                        })}
+                        volumeData={chartData.data.map(d => {
+                          const utcSec = new Date(d.timestamp).getTime() / 1000
+                          const t = period === '1d' ? utcSec + 19800 : utcSec
+                          return {
+                            time: t as any,
+                            value: d.volume,
+                            color: d.close >= d.open ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
+                          }
+                        })}
                         height={320}
                         activePeriod={period}
                         onPeriodChange={setPeriod}
@@ -601,18 +627,22 @@ export default function StockDetailPage() {
                 <div className="w-full mt-4">
                   <CandlestickChart 
                     symbol={symbol}
-                    data={chartData.data.map(d => ({
-                      time: (new Date(d.timestamp).getTime() / 1000) as any,
-                      open: d.open,
-                      high: d.high,
-                      low: d.low,
-                      close: d.close,
-                    }))}
-                    volumeData={chartData.data.map(d => ({
-                      time: (new Date(d.timestamp).getTime() / 1000) as any,
-                      value: d.volume,
-                      color: d.close >= d.open ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
-                    }))}
+                    data={chartData.data.map(d => {
+                      const utcSec = new Date(d.timestamp).getTime() / 1000
+                      // Only shift to IST for intraday (1d) so hours show correctly.
+                      // For multi-day ranges keep raw UTC — chart lib formats those as dates.
+                      const t = period === '1d' ? utcSec + 19800 : utcSec
+                      return { time: t as any, open: d.open, high: d.high, low: d.low, close: d.close }
+                    })}
+                    volumeData={chartData.data.map(d => {
+                      const utcSec = new Date(d.timestamp).getTime() / 1000
+                      const t = period === '1d' ? utcSec + 19800 : utcSec
+                      return {
+                        time: t as any,
+                        value: d.volume,
+                        color: d.close >= d.open ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'
+                      }
+                    })}
                     height={500}
                     activePeriod={period}
                     onPeriodChange={setPeriod}

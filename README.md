@@ -18,6 +18,9 @@ FinPulse AI is a privacy-first, state-of-the-art GenAI and machine learning-powe
 ### 4. Privacy-First Security Login Portal
 ![FinPulse Login Page](public/images/login-page-preview.jpg)
 
+### 5. FinPulse Live Trading Terminal (Latest)
+![FinPulse Live Trading Terminal (Latest)](public/images/finpulse-trading-terminal.png)
+
 ---
 
 ## 🏆 Core USPs (Unique Selling Propositions)

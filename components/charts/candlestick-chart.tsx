@@ -106,16 +106,7 @@ export const CandlestickChart: React.FC<Props> = ({
 
   const activeInterval = getIntervalFromPeriod(activePeriod)
 
-  const handleIntervalClick = (int: string) => {
-    if (!onPeriodChange) return
-    let targetPeriod = '1mo'
-    if (int === '1m' || int === '5m') targetPeriod = '1d'
-    else if (int === '15m') targetPeriod = '5d'
-    else if (int === '1h') targetPeriod = '1mo'
-    else if (int === '1d') targetPeriod = '3mo'
-    else if (int === '1w') targetPeriod = '1y'
-    onPeriodChange(targetPeriod)
-  }
+
 
   // Interactive Indicator Toggles
   const [showVolume, setShowVolume] = useState(true)
@@ -317,6 +308,8 @@ export const CandlestickChart: React.FC<Props> = ({
       chartRef.current?.applyOptions({ width: containerRef.current?.clientWidth ?? 800 })
     }
 
+    const isIntraday = activePeriod === '1d'
+
     const chart = createChart(containerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
@@ -334,11 +327,39 @@ export const CandlestickChart: React.FC<Props> = ({
       },
       width: containerRef.current.clientWidth,
       height,
+      localization: {
+        locale: 'en-IN',
+        // For intraday: timestamps are pre-shifted to IST, so display in UTC (which is IST after shift).
+        // For multi-day: use real IST locale for date formatting.
+        timeFormatter: (time: number) => {
+          const d = new Date(time * 1000)
+          if (isIntraday) {
+            // Timestamps are IST-shifted, read as UTC to get IST wall-clock time
+            const hh = String(d.getUTCHours()).padStart(2, '0')
+            const mm = String(d.getUTCMinutes()).padStart(2, '0')
+            const day = d.getUTCDate()
+            const month = d.toLocaleString('en-IN', { month: 'short', timeZone: 'UTC' })
+            return `${day} ${month}  ${hh}:${mm} IST`
+          }
+          // Multi-day: real UTC dates, format naturally
+          return d.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
+        },
+      },
       timeScale: {
-        timeVisible: true,
+        timeVisible: isIntraday, // show time labels only for 1d intraday
         secondsVisible: false,
         borderColor: 'rgba(255, 255, 255, 0.06)',
         fixLeftEdge: true,
+        // Only override tick formatter for intraday — for multi-day let the library auto-format dates
+        ...(isIntraday ? {
+          tickMarkFormatter: (time: number) => {
+            const d = new Date(time * 1000)
+            // Timestamps are IST-shifted, read UTC fields to get IST wall-clock
+            const hh = String(d.getUTCHours()).padStart(2, '0')
+            const mm = String(d.getUTCMinutes()).padStart(2, '0')
+            return `${hh}:${mm}`
+          },
+        } : {}),
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.06)',
@@ -779,20 +800,39 @@ export const CandlestickChart: React.FC<Props> = ({
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 bg-zinc-950/70 border border-white/5 rounded-xl p-3.5 text-xs">
         {/* Left: Quick Actions, Intervals & Chart style picker */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Quick intervals */}
-          <div className="flex items-center bg-white/5 rounded-lg border border-white/10 p-0.5 font-semibold text-white/50 text-[10px]">
-            {['1m', '5m', '15m', '1h', '1d', '1w'].map(int => (
-              <button
-                key={int}
-                onClick={() => handleIntervalClick(int)}
-                className={cn(
-                  'h-5 px-2.5 rounded-md transition-all uppercase',
-                  activeInterval === int ? 'bg-purple-600 text-white font-bold' : 'hover:text-white/80'
-                )}
-              >
-                {int}
-              </button>
-            ))}
+          {/* Quick Ranges */}
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] text-white/40 font-bold uppercase tracking-wider">Range:</span>
+            <div className="flex items-center bg-white/5 rounded-lg border border-white/10 p-0.5 font-semibold text-white/50 text-[10px]">
+              {[
+                { label: '1D', value: '1d' },
+                { label: '5D', value: '5d' },
+                { label: '1M', value: '1mo' },
+                { label: '3M', value: '3mo' },
+                { label: '6M', value: '6mo' },
+                { label: '1Y', value: '1y' },
+                { label: '5Y', value: '5y' }
+              ].map(item => (
+                <button
+                  key={item.value}
+                  onClick={() => onPeriodChange && onPeriodChange(item.value)}
+                  className={cn(
+                    'h-5 px-2.5 rounded-md transition-all',
+                    activePeriod === item.value ? 'bg-purple-600 text-white font-bold' : 'hover:text-white/80'
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="w-[1px] h-4 bg-white/10" />
+
+          {/* Read-only Candle size display */}
+          <div className="flex items-center gap-1.5 text-[10px] text-white/50 bg-white/5 border border-white/10 rounded-lg px-2.5 py-0.5 h-6.5">
+            <span className="text-white/30 font-bold uppercase text-[8px] tracking-wider">Candle:</span>
+            <span className="font-mono text-purple-300 font-bold uppercase text-[9px]">{activeInterval}</span>
           </div>
 
           <div className="w-[1px] h-4 bg-white/10" />

@@ -337,21 +337,49 @@ export function TradingTerminal({ initialSymbol }: { initialSymbol?: string }) {
 
     // 4. Load spot history & calculate correlated option premium candlesticks
     if (spotHistory.length > 0) {
-      spotSeries.setData(spotHistory)
-      
-      const optionData = spotHistory.map(c => ({
-        time: c.time,
-        open: calculateOptionPremium(c.open, strikePrice, optionType, activeAsset),
-        high: calculateOptionPremium(optionType === "CE" ? c.high : c.low, strikePrice, optionType, activeAsset),
-        low: calculateOptionPremium(optionType === "CE" ? c.low : c.high, strikePrice, optionType, activeAsset),
-        close: calculateOptionPremium(c.close, strikePrice, optionType, activeAsset)
-      }))
-      optionSeries.setData(optionData)
-      
-      const ema9Data = spotHistory.map(c => ({ time: c.time, value: +(c.close * 0.999).toFixed(2) }))
-      const ema20Data = spotHistory.map(c => ({ time: c.time, value: +(c.close * 0.998).toFixed(2) }))
-      ema9Series.setData(ema9Data)
-      ema20Series.setData(ema20Data)
+      // Robust client-side deduplication and sorting to guarantee strictly ascending order and prevent lightweight-charts errors
+      const seenTimes = new Set<string | number>()
+      const sanitizedSpotHistory = spotHistory
+        .filter(c => c && c.time !== undefined && c.time !== null)
+        .map(c => {
+          let timeKey = c.time
+          if (typeof timeKey === 'string' && timeKey.includes('T')) {
+            timeKey = timeKey.split('T')[0]
+          }
+          return { ...c, time: timeKey }
+        })
+        .sort((a, b) => {
+          const valA = typeof a.time === 'number' ? a.time : Number(a.time)
+          const valB = typeof b.time === 'number' ? b.time : Number(b.time)
+          if (!isNaN(valA) && !isNaN(valB)) {
+            return valA - valB
+          }
+          return String(a.time).localeCompare(String(b.time))
+        })
+        .filter(c => {
+          const key = typeof c.time === 'number' ? c.time : String(c.time)
+          if (seenTimes.has(key)) return false
+          seenTimes.add(key)
+          return true
+        })
+
+      if (sanitizedSpotHistory.length > 0) {
+        spotSeries.setData(sanitizedSpotHistory)
+        
+        const optionData = sanitizedSpotHistory.map(c => ({
+          time: c.time,
+          open: calculateOptionPremium(c.open, strikePrice, optionType, activeAsset),
+          high: calculateOptionPremium(optionType === "CE" ? c.high : c.low, strikePrice, optionType, activeAsset),
+          low: calculateOptionPremium(optionType === "CE" ? c.low : c.high, strikePrice, optionType, activeAsset),
+          close: calculateOptionPremium(c.close, strikePrice, optionType, activeAsset)
+        }))
+        optionSeries.setData(optionData)
+        
+        const ema9Data = sanitizedSpotHistory.map(c => ({ time: c.time, value: +(c.close * 0.999).toFixed(2) }))
+        const ema20Data = sanitizedSpotHistory.map(c => ({ time: c.time, value: +(c.close * 0.998).toFixed(2) }))
+        ema9Series.setData(ema9Data)
+        ema20Series.setData(ema20Data)
+      }
     }
 
     // Fit views
