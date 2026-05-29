@@ -4,6 +4,22 @@ FinPulse AI is a privacy-first, state-of-the-art GenAI and machine learning-powe
 
 ---
 
+## 🖼️ Application Previews
+
+### 1. Next-Generation Landing Page
+![FinPulse AI Landing Page](public/images/landing-page-preview.png)
+
+### 2. Live Options & Futures Trading Terminal
+![FinPulse Live Trading Terminal](public/images/trading-terminal-preview.png)
+
+### 3. Financial Education & AI Coach Hub
+![FinPulse Education Hub](public/images/education-hub-preview.png)
+
+### 4. Privacy-First Security Login Portal
+![FinPulse Login Page](public/images/login-page-preview.png)
+
+---
+
 ## 🏆 Core USPs (Unique Selling Propositions)
 
 FinPulse AI stands far ahead of standard finance templates through **8 genuine, advanced engineering solutions** designed to solve complex real-world fintech challenges:
