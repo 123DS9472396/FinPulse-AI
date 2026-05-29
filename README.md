@@ -7,16 +7,16 @@ FinPulse AI is a privacy-first, state-of-the-art GenAI and machine learning-powe
 ## 🖼️ Application Previews
 
 ### 1. Next-Generation Landing Page
-![FinPulse AI Landing Page](public/images/landing-page-preview.png)
+![FinPulse AI Landing Page](public/images/landing-page-preview.jpg)
 
 ### 2. Live Options & Futures Trading Terminal
-![FinPulse Live Trading Terminal](public/images/trading-terminal-preview.png)
+![FinPulse Live Trading Terminal](public/images/trading-terminal-preview.jpg)
 
 ### 3. Financial Education & AI Coach Hub
-![FinPulse Education Hub](public/images/education-hub-preview.png)
+![FinPulse Education Hub](public/images/education-hub-preview.jpg)
 
 ### 4. Privacy-First Security Login Portal
-![FinPulse Login Page](public/images/login-page-preview.png)
+![FinPulse Login Page](public/images/login-page-preview.jpg)
 
 ---
 
