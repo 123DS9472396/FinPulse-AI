@@ -5,6 +5,7 @@ import { AccountSettings } from "@/components/settings/account-settings"
 import { NotificationSettings } from "@/components/settings/notification-settings"
 import { AppearanceSettings } from "@/components/settings/appearance-settings"
 import { SaasBilling } from "@/components/settings/saas-billing"
+import { WebhookSettings } from "@/components/settings/webhook-settings"
 
 export default async function SettingsPage() {
   const supabase = getServerSupabaseClient()
@@ -25,6 +26,7 @@ export default async function SettingsPage() {
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="billing">⚡ SaaS Plans & Partnerships</TabsTrigger>
+          <TabsTrigger value="automations">🤖 SaaS Webhook Automations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="account">
@@ -74,7 +76,20 @@ export default async function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="automations">
+          <Card className="glass-card glow glow-purple glass-highlight hover-float">
+            <CardHeader>
+              <CardTitle className="text-gradient-heading">SaaS Webhook Automations</CardTitle>
+              <CardDescription>Configure and test secure triggers for n8n, Make.com, or Zapier</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WebhookSettings />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   )
 }
+
