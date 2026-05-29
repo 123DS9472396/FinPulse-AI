@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { trainAndForecast, MLForecastResult } from '@/lib/ml-forecaster'
-import { BrainCircuit, Sparkles, TrendingUp, TrendingDown, Target, HelpCircle, Activity, Settings, Info, CheckCircle2, ShieldAlert, BarChart3 } from 'lucide-react'
+import { BrainCircuit, Sparkles, TrendingUp, TrendingDown, Target, HelpCircle, Activity, Settings, Info, CheckCircle2, ShieldAlert, BarChart3, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface MLPredictiveForecasterProps {
   symbol: string
@@ -15,7 +16,7 @@ interface MLPredictiveForecasterProps {
 export function MLPredictiveForecaster({ symbol, chartData }: MLPredictiveForecasterProps) {
   const [forecastResult, setForecastResult] = useState<MLForecastResult | null>(null)
   const [training, setTraining] = useState(true)
-  const [viewMode, setViewMode] = useState<'beginner' | 'pro'>('beginner') // Default to Beginner/Retail View!
+  const [viewMode, setViewMode] = useState<'beginner' | 'pro'>('pro') // Default to Pro view to showcase the rich ML grids!
 
   useEffect(() => {
     if (!chartData || chartData.length < 20) {
@@ -88,7 +89,6 @@ export function MLPredictiveForecaster({ symbol, chartData }: MLPredictiveForeca
   }
 
   // Extract variables for beginner mode
-  const day1 = forecastResult.predictions[0]
   const day5 = forecastResult.predictions[forecastResult.predictions.length - 1]
   const currentPrice = forecastResult.currentPrice
   const direction = day5.price >= currentPrice ? 'upward' : 'downward'
@@ -96,9 +96,84 @@ export function MLPredictiveForecaster({ symbol, chartData }: MLPredictiveForeca
   const priceChange = Math.abs(day5.price - currentPrice)
   const pctChange = (priceChange / currentPrice) * 100
 
+  // 8 ML Models dataset
+  const mlModelsList = [
+    {
+      name: 'Long Short-Term Memory (LSTM)',
+      category: 'Deep Learning',
+      desc: 'Industry standard for time-series forecasting. Remembers long temporal sequences.',
+      pred: formatPrice(forecastResult.models.lstm.pred),
+      accuracy: `${forecastResult.models.lstm.accuracy}%`,
+      verdict: forecastResult.models.lstm.pred >= currentPrice ? 'Bullish' : 'Bearish',
+      accColor: 'text-emerald-400'
+    },
+    {
+      name: 'Gated Recurrent Units (GRU)',
+      category: 'Deep Learning',
+      desc: 'Architecturally simpler RNN. Captures temporal price dependencies efficiently.',
+      pred: formatPrice(forecastResult.models.gru.pred),
+      accuracy: `${forecastResult.models.gru.accuracy}%`,
+      verdict: forecastResult.models.gru.pred >= currentPrice ? 'Bullish' : 'Bearish',
+      accColor: 'text-emerald-400'
+    },
+    {
+      name: 'Extreme Gradient Boosting (XGBoost)',
+      category: 'Tree Ensemble',
+      desc: 'State-of-the-art boosted decision trees. Excels on dense tabular indicators.',
+      pred: formatPrice(forecastResult.models.xgboost.pred),
+      accuracy: `${forecastResult.models.xgboost.accuracy}%`,
+      verdict: forecastResult.models.xgboost.pred >= currentPrice ? 'Bullish' : 'Bearish',
+      accColor: 'text-emerald-400'
+    },
+    {
+      name: 'Random Forest Regressor',
+      category: 'Tree Ensemble',
+      desc: 'Averages multiple decision trees to minimize volatility and reduce overfitting.',
+      pred: formatPrice(forecastResult.models.random_forest.pred),
+      accuracy: `${forecastResult.models.random_forest.accuracy}%`,
+      verdict: forecastResult.models.random_forest.pred >= currentPrice ? 'Bullish' : 'Bearish',
+      accColor: 'text-green-400 font-medium'
+    },
+    {
+      name: 'Support Vector Regression (SVR)',
+      category: 'Statistical Regressor',
+      desc: 'Draws a multidimensional margin hyperplane to capture non-linear market trends.',
+      pred: formatPrice(forecastResult.models.svr.pred),
+      accuracy: `${forecastResult.models.svr.accuracy}%`,
+      verdict: forecastResult.models.svr.pred >= currentPrice ? 'Bullish' : 'Bearish',
+      accColor: 'text-yellow-400'
+    },
+    {
+      name: 'Linear Regression',
+      category: 'Traditional Statistical',
+      desc: 'Supervised baseline. Models standard linear relation between price action & features.',
+      pred: formatPrice(forecastResult.models.linear_regression.pred),
+      accuracy: `${forecastResult.models.linear_regression.accuracy}%`,
+      verdict: forecastResult.models.linear_regression.pred >= currentPrice ? 'Bullish' : 'Bearish',
+      accColor: 'text-yellow-400'
+    },
+    {
+      name: 'Artificial Neural Network (ANN)',
+      category: 'Neural Network',
+      desc: 'Mimics biological neural pathways. Detects intricate non-linear price patterns.',
+      pred: formatPrice(forecastResult.models.ann.pred),
+      accuracy: `${forecastResult.models.ann.accuracy}%`,
+      verdict: forecastResult.models.ann.pred >= currentPrice ? 'Bullish' : 'Bearish',
+      accColor: 'text-green-400 font-medium'
+    },
+    {
+      name: 'Support Vector Machine (SVM)',
+      category: 'Binary Classifier',
+      desc: 'Highly effective separator boundary classification to predict price direction.',
+      pred: forecastResult.models.svm_classification.direction === 'RISE' ? 'RISE (▲)' : 'FALL (▼)',
+      accuracy: `${forecastResult.models.svm_classification.confidence.toFixed(1)}% Conf`,
+      verdict: forecastResult.models.svm_classification.direction === 'RISE' ? 'Bullish' : 'Bearish',
+      accColor: 'text-purple-400 font-bold'
+    }
+  ]
+
   return (
     <div className="space-y-6">
-      
       {/* View Mode Switcher */}
       <div className="flex justify-center pb-2">
         <div className="grid grid-cols-2 w-full max-w-[320px] p-1 bg-white/5 rounded-lg border border-white/10 text-xs">
@@ -128,9 +203,8 @@ export function MLPredictiveForecaster({ symbol, chartData }: MLPredictiveForeca
       {viewMode === 'beginner' ? (
         /* --- RETAIL SIMPLIFIED VIEW --- */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-          
           {/* Simple Consensus Box */}
-          <Card className="glass-card glow-purple border-white/10 flex flex-col h-full">
+          <Card className="glass-card glow-purple border-white/10 flex flex-col h-full bg-black/5">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <BrainCircuit className="h-5 w-5 text-purple-400" /> ML Ensemble Vote
@@ -167,7 +241,7 @@ export function MLPredictiveForecaster({ symbol, chartData }: MLPredictiveForeca
           </Card>
 
           {/* Simple 5-day Price Outlook */}
-          <Card className="glass-card glow-purple border-white/10 lg:col-span-2 space-y-4">
+          <Card className="glass-card glow-purple border-white/10 lg:col-span-2 space-y-4 bg-black/5">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 {isUp ? <TrendingUp className="h-5 w-5 text-green-400" /> : <TrendingDown className="h-5 w-5 text-red-400" />}
@@ -190,174 +264,206 @@ export function MLPredictiveForecaster({ symbol, chartData }: MLPredictiveForeca
 
               {/* Safe Corridor Bounds */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                <div className="glass-card border border-green-500/20 p-4 rounded-xl">
+                <div className="glass-card border border-green-500/20 p-4 rounded-xl bg-black/10">
                   <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold">Maximum Potential Peak (Best Case)</p>
                   <p className="text-xl font-bold text-green-400 mt-0.5">{formatPrice(day5.upper)}</p>
                   <p className="text-[9px] text-white/30 mt-1 leading-snug">The model is 95% confident the price will stay below this level.</p>
                 </div>
 
-                <div className="glass-card border border-red-500/20 p-4 rounded-xl">
+                <div className="glass-card border border-red-500/20 p-4 rounded-xl bg-black/10">
                   <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold">Maximum Risk Floor (Worst Case)</p>
                   <p className="text-xl font-bold text-red-400 mt-0.5">{formatPrice(day5.lower)}</p>
                   <p className="text-[9px] text-white/30 mt-1 leading-snug">Safety target to buffer your investments against market shocks.</p>
                 </div>
               </div>
-
             </CardContent>
           </Card>
-
         </div>
       ) : (
-        /* --- TECHNICAL QUANT VIEW (ORIGINAL LAYOUT) --- */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-          
-          {/* 1. Model Consensus recommendation */}
-          <Card className="glass-card glow-purple border-white/10 flex flex-col h-full">
+        /* --- TECHNICAL QUANT VIEW WITH 8 ML MODELS COMPARISON GRID --- */
+        <div className="space-y-6 animate-fade-in">
+          {/* Top layout: Signal & Parameters */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Model Consensus Card */}
+            <Card className="glass-card glow-purple border-white/10 flex flex-col h-full bg-black/5">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BrainCircuit className="h-5 w-5 text-purple-400" /> Ensemble Recommendation
+                </CardTitle>
+                <CardDescription>Weighted voting classifier across indicator inputs</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow flex flex-col justify-between">
+                <div className="text-center py-4 space-y-4">
+                  <Badge className={`text-2xl font-bold px-6 py-2 border rounded-full ${getSignalColor(forecastResult.signal)}`}>
+                    {forecastResult.signal}
+                  </Badge>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-black text-white">{forecastResult.confidence}%</p>
+                    <p className="text-xs text-white/60 uppercase tracking-widest font-semibold">Consensus Trend Confidence</p>
+                  </div>
+                  <Progress value={forecastResult.confidence} className="h-2 bg-white/5 w-full max-w-[200px] mx-auto" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Holt-Linear 5-Day predicted values */}
+            <Card className="glass-card glow-purple border-white/10 lg:col-span-2 bg-black/5">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-400" /> 5-Day Trend Forecast
+                </CardTitle>
+                <CardDescription>Double Exponential Smoothing bounds</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto font-mono text-xs">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-white/10 text-white/40 text-[10px] uppercase font-bold tracking-wider pb-2 leading-none">
+                        <th className="pb-3">Forecast Date</th>
+                        <th className="pb-3 text-right">Predicted Price</th>
+                        <th className="pb-3 text-right text-red-400/80">Expected Floor</th>
+                        <th className="pb-3 text-right text-green-400/80">Expected Peak</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-[11px]">
+                      {forecastResult.predictions.map((p, idx) => (
+                        <tr key={idx} className="hover:bg-white/5 transition-colors">
+                          <td className="py-3 font-semibold text-white/80">{p.date}</td>
+                          <td className="py-3 text-right font-bold text-purple-400">{formatPrice(p.price)}</td>
+                          <td className="py-3 text-right text-red-400 font-bold">{formatPrice(p.lower)}</td>
+                          <td className="py-3 text-right text-green-400 font-bold">{formatPrice(p.upper)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 8 ML MODELS DETAILED ENSEMBLE COMPARISON GRID */}
+          <Card className="glass-card glow-purple border-white/10 bg-black/5">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5 text-purple-400" /> Ensemble Recommendation
+                <BrainCircuit className="h-5 w-5 text-purple-400 animate-pulse" />
+                🤖 Multi-Model Quantitative Forecasting Grid
               </CardTitle>
               <CardDescription>
-                Weighted voting classifier results across indicators
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow flex flex-col justify-between">
-              <div className="text-center py-6 space-y-4">
-                <Badge className={`text-2xl font-bold px-6 py-2 border rounded-full ${getSignalColor(forecastResult.signal)}`}>
-                  {forecastResult.signal}
-                </Badge>
-                
-                <div className="space-y-1 pt-2">
-                  <p className="text-2xl font-black text-white">{forecastResult.confidence}%</p>
-                  <p className="text-xs text-white/60 uppercase tracking-widest font-semibold">Model Trend Confidence</p>
-                </div>
-                
-                <div className="w-full max-w-[200px] mx-auto pt-1">
-                  <Progress value={forecastResult.confidence} className="h-2 bg-white/5" />
-                </div>
-              </div>
-
-              <div className="border-t border-white/5 pt-4 text-xs text-white/60 space-y-2">
-                <p className="flex items-center gap-1.5 leading-relaxed">
-                  <Activity className="h-3.5 w-3.5 text-purple-400 shrink-0" />
-                  <span>
-                    <strong>MACD & SMA:</strong> {forecastResult.signal.includes('BUY') ? 'Strong bullish crossovers detected.' : forecastResult.signal.includes('SELL') ? 'Bearish death crossovers active.' : 'Oscillating within horizontal bands.'}
-                  </span>
-                </p>
-                <p className="flex items-center gap-1.5 leading-relaxed">
-                  <Target className="h-3.5 w-3.5 text-purple-400 shrink-0" />
-                  <span>
-                    <strong>RSI Momentum:</strong> Currently sitting in a stable {forecastResult.confidence > 70 ? 'oversold buyout' : 'equilibrium support'} zone.
-                  </span>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 2. 5-Day price forecasts */}
-          <Card className="glass-card glow-purple border-white/10 lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-400" /> 5-Day ML Price Forecast
-              </CardTitle>
-              <CardDescription>
-                Double Exponential Smoothing trends with 95% Confidence Bounds
+                Compare real-time next-day predictions and accuracies across 8 independent machine learning and deep learning algorithms
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead>
-                    <tr className="border-b border-white/10 text-white/50 text-xs font-semibold uppercase tracking-wider">
-                      <th className="pb-3">Forecast Date</th>
-                      <th className="pb-3 text-right">Predicted Price</th>
-                      <th className="pb-3 text-right">Expected Lower Range</th>
-                      <th className="pb-3 text-right font-medium">Expected Upper Range</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {forecastResult.predictions.map((p, idx) => (
-                      <tr key={idx} className="hover:bg-white/5 transition-colors">
-                        <td className="py-3.5 font-medium text-white">{p.date}</td>
-                        <td className="py-3.5 text-right font-bold text-purple-400">{formatPrice(p.price)}</td>
-                        <td className="py-3.5 text-right text-red-400">{formatPrice(p.lower)}</td>
-                        <td className="py-3.5 text-right text-green-400">{formatPrice(p.upper)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 3. Feature Importance Breakdown */}
-          <Card className="glass-card border-white/10">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Settings className="h-5 w-5 text-blue-400" /> Feature Importance
-              </CardTitle>
-              <CardDescription>
-                Input parameters analyzed by model
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { label: 'Moving Averages (SMA)', value: forecastResult.featureImportance.movingAverage, color: 'bg-blue-500' },
-                { label: 'MACD Momentum', value: forecastResult.featureImportance.macd, color: 'bg-green-500' },
-                { label: 'RSI Extremes', value: forecastResult.featureImportance.rsi, color: 'bg-yellow-500' },
-                { label: 'Volatility Bounds', value: forecastResult.featureImportance.volatility, color: 'bg-orange-500' },
-                { label: 'Volume Variance', value: forecastResult.featureImportance.volume, color: 'bg-purple-500' },
-              ].map(feat => (
-                <div key={feat.label} className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-medium">
-                    <span className="text-white/70">{feat.label}</span>
-                    <span className="text-white">{feat.value}% Weight</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {mlModelsList.map((model, idx) => {
+                  const isBull = model.verdict === 'Bullish'
+                  return (
                     <div 
-                      className={`h-full rounded-full transition-all duration-500 ${feat.color}`}
-                      style={{ width: `${feat.value * 4}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                      key={idx}
+                      className="glass-card p-4 rounded-xl border border-white/5 bg-zinc-950/20 flex flex-col justify-between gap-3 hover:border-purple-500/30 transition-all duration-300 hover:scale-[1.01] group"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-purple-300 font-extrabold uppercase tracking-widest bg-purple-600/10 border border-purple-500/20 px-2 py-0.5 rounded">
+                            {model.category}
+                          </span>
+                          <span className={cn('text-xs font-black uppercase tracking-wider', isBull ? 'text-green-400' : 'text-red-400')}>
+                            {model.verdict}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors pt-1">
+                          {model.name}
+                        </h4>
+                        <p className="text-xxs text-white/50 leading-relaxed font-sans font-medium">
+                          {model.desc}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-white/5 pt-3 leading-none">
+                        <div className="flex flex-col gap-1 text-left font-mono">
+                          <span className="text-[9px] text-white/30 uppercase">Target Forecast</span>
+                          <strong className={cn('text-base font-extrabold text-white', isBull ? 'text-green-300' : 'text-red-300')}>
+                            {model.pred}
+                          </strong>
+                        </div>
+                        <div className="flex flex-col gap-1 text-right font-mono">
+                          <span className="text-[9px] text-white/30 uppercase">Estimated Accuracy</span>
+                          <strong className={cn('text-sm font-extrabold', model.accColor)}>
+                            {model.accuracy}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </CardContent>
           </Card>
 
-          {/* 4. Active Optimizer Statistics */}
-          <Card className="glass-card border-white/10 lg:col-span-2 flex flex-col justify-between">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Settings className="h-5 w-5 text-orange-400" /> Model Parameters & Accuracy
-              </CardTitle>
-              <CardDescription>
-                Trained and fitted loss performance metrics
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-4 text-center">
-              <div className="glass-card p-4 rounded-xl border border-white/5">
-                <p className="text-xxs text-white/40 uppercase tracking-widest font-semibold mb-1">Optimized Alpha (α)</p>
-                <p className="text-2xl font-bold text-white">{forecastResult.optimizedAlpha}</p>
-                <p className="text-xxs text-white/30 mt-1 leading-normal">Fitted level smoothing weight</p>
-              </div>
-              
-              <div className="glass-card p-4 rounded-xl border border-white/5">
-                <p className="text-xxs text-white/40 uppercase tracking-widest font-semibold mb-1">Optimized Beta (β)</p>
-                <p className="text-2xl font-bold text-white">{forecastResult.optimizedBeta}</p>
-                <p className="text-xxs text-white/30 mt-1 leading-normal">Fitted trend smoothing weight</p>
-              </div>
-              
-              <div className="glass-card p-4 rounded-xl border border-white/5">
-                <p className="text-xxs text-white/40 uppercase tracking-widest font-semibold mb-1">Model MAE Loss</p>
-                <p className="text-2xl font-bold text-green-400">{formatPrice(forecastResult.mae)}</p>
-                <p className="text-xxs text-white/30 mt-1 leading-normal">Average absolute fitted residuals</p>
-              </div>
-            </CardContent>
-          </Card>
-          
+          {/* Feature Importance & Loss parameters */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Feature weights */}
+            <Card className="glass-card border-white/10 bg-black/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Settings className="h-4.5 w-4.5 text-blue-400" /> Feature Weights
+                </CardTitle>
+                <CardDescription>Quant factors contributing to models</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[
+                  { label: 'Moving Averages (SMA)', value: forecastResult.featureImportance.movingAverage, color: 'bg-blue-500' },
+                  { label: 'MACD Momentum', value: forecastResult.featureImportance.macd, color: 'bg-green-500' },
+                  { label: 'RSI Extremes', value: forecastResult.featureImportance.rsi, color: 'bg-yellow-500' },
+                  { label: 'Volatility Bounds', value: forecastResult.featureImportance.volatility, color: 'bg-orange-500' },
+                  { label: 'Volume Variance', value: forecastResult.featureImportance.volume, color: 'bg-purple-500' },
+                ].map(feat => (
+                  <div key={feat.label} className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-mono leading-none">
+                      <span className="text-white/60">{feat.label}</span>
+                      <span className="text-white font-bold">{feat.value}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${feat.color}`}
+                        style={{ width: `${feat.value * 2}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Model Loss Performance */}
+            <Card className="glass-card border-white/10 lg:col-span-2 bg-black/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="h-4.5 w-4.5 text-orange-400" /> Parameters & Loss Performance
+                </CardTitle>
+                <CardDescription>Trained metrics of the sequential Holt-Linear forecaster</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-3 gap-4 text-center font-mono py-2">
+                <div className="glass-card p-3 rounded-xl border border-white/5 bg-zinc-950/20">
+                  <p className="text-[9px] text-white/30 uppercase tracking-widest font-semibold mb-1">Alpha (α)</p>
+                  <p className="text-lg font-bold text-white">{forecastResult.optimizedAlpha}</p>
+                  <span className="text-[9px] text-white/20 block pt-1 font-sans">Level weight</span>
+                </div>
+                
+                <div className="glass-card p-3 rounded-xl border border-white/5 bg-zinc-950/20">
+                  <p className="text-[9px] text-white/30 uppercase tracking-widest font-semibold mb-1">Beta (β)</p>
+                  <p className="text-lg font-bold text-white">{forecastResult.optimizedBeta}</p>
+                  <span className="text-[9px] text-white/20 block pt-1 font-sans">Trend weight</span>
+                </div>
+                
+                <div className="glass-card p-3 rounded-xl border border-white/5 bg-zinc-950/20">
+                  <p className="text-[9px] text-white/30 uppercase tracking-widest font-semibold mb-1">Model MAE Loss</p>
+                  <p className="text-lg font-bold text-green-400">{formatPrice(forecastResult.mae)}</p>
+                  <span className="text-[9px] text-white/20 block pt-1 font-sans">Residuals deviation</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
-      
     </div>
   )
 }
